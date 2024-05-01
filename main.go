@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"example.com/apirest/db"
 	"example.com/apirest/models"
@@ -14,6 +15,7 @@ func main() {
 	server := gin.Default()
 
 	server.GET("/events", getEvents) // the routes and the handlers
+	server.GET("/events/:id", getEvent)
 	server.POST("/events", createEvent)
 
 	server.Run(":8080") //  run the server on localhost:8080
@@ -27,6 +29,24 @@ func getEvents(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusOK, events)
+}
+
+func getEvent(context *gin.Context) {
+	eventId, err := strconv.ParseInt("id", 10, 64)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event Id"})
+		return
+	}
+
+	event, err := models.GetEventById(eventId)
+
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event"})
+	}
+
+	context.JSON(http.StatusOK, event)
+
 }
 
 func createEvent(context *gin.Context) {
